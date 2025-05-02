@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editar Gasto</title>
+</head>
+<body>
+    <h2>Editar Gasto</h2>
+    <p>Todos los montos se registrarán en Pesos Colombianos (COP).</p>
+    <form method="POST">
+        <label for="date">Fecha:</label><br>
+        <input type="date" id="date" name="date" value="{{ expense.date }}" required><br><br>
+        <label for="description">Descripción:</label><br>
+        <input type="text" id="description" name="description" value="{{ expense.description }}" required><br><br>
+        <label for="category">Categoría:</label><br>
+        <select id="category" name="category" required>
+            {% for category in categories %}
+            <option value="{{ category }}" {% if category == expense.category %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+        </select><br><br>
+        <label for="payment_method">Método de Pago:</label><br>
+        <select id="payment_method" name="payment_method">
+            <option value="Efectivo" {% if expense.payment_method == 'Efectivo' %}selected{% endif %}>Efectivo</option>
+            <option value="Tarjeta de Débito" {% if expense.payment_method == 'Tarjeta de Débito' %}selected{% endif %}>Tarjeta de Débito</option>
+            <option value="Tarjeta de Crédito" {% if expense.payment_method == 'Tarjeta de Crédito' %}selected{% endif %}>Tarjeta de Crédito</option>
+            <option value="Transferencia Bancaria" {% if expense.payment_method == 'Transferencia Bancaria' %}selected{% endif %}>Transferencia Bancaria</option>
+            <option value="Otro" {% if expense.payment_method == 'Otro' %}selected{% endif %}>Otro</option>
+        </select><br><br>
+        <label for="amount">Monto (COP):</label><br>
+        <input type="number" step="0.01" id="amount" name="amount" value="{{ expense.amount }}" required><br><br>
+        <input type="hidden" name="expense_id" value="{{ expense.id }}">
+        <button type="submit">Guardar Cambios</button>
+    </form>
+    <p><a href="{{ url_for('dashboard') }}">Volver al Panel</a></p>
+</body>
+</html>

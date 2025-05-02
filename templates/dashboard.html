@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Panel de Control</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h2>Panel de Control</h2>
+    <p>
+        <a href="{{ url_for('add_expense') }}">Agregar Nuevo Gasto</a> |
+        <a href="{{ url_for('profile') }}">Mi Perfil</a> |
+        <a href="{{ url_for('categories') }}">Gestionar Categorías</a> |
+        <a href="{{ url_for('reports') }}">Generar Informe</a> |
+        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+    </p>
+
+    <h3>Filtrar Gastos</h3>
+    <form method="GET" action="{{ url_for('dashboard') }}">
+        <label for="start_date">Fecha de Inicio:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+        <label for="end_date">Fecha de Fin:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+        <label for="category">Categoría:</label>
+        <select id="category" name="category">
+            <option value="">Todas</option>
+            <option value="Food" {% if selected_category == 'Food' %}selected{% endif %}>Comida</option>
+            <option value="Transportation" {% if selected_category == 'Transportation' %}selected{% endif %}>Transporte</option>
+            <option value="Entertainment" {% if selected_category == 'Entertainment' %}selected{% endif %}>Entretenimiento</option>
+            <option value="Utilities" {% if selected_category == 'Utilities' %}selected{% endif %}>Servicios</option>
+            <option value="Housing" {% if selected_category == 'Housing' %}selected{% endif %}>Vivienda</option>
+            <option value="Health" {% if selected_category == 'Health' %}selected{% endif %}>Salud</option>
+            <option value="Other" {% if selected_category == 'Other' %}selected{% endif %}>Otro</option>
+        </select>
+        <button type="submit">Filtrar</button>
+        {% if start_date or end_date or selected_category %}
+        <a href="{{ url_for('dashboard') }}">Mostrar Todos</a>
+        {% endif %}
+    </form>
+
+<h3>Tus Gastos Recientes</h3>
+    {% if expenses %}
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Descripción</th>
+                <th>Categoría</th>
+                <th>Monto (COP)</th>
+                <th>Método de Pago</th> <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses %}
+                <tr>
+                    <td>{{ expense.date }}</td>
+                    <td>{{ expense.description }}</td>
+                    <td>
+                        {% if expense.category == 'Food' %}Comida
+                        {% elif expense.category == 'Transportation' %}Transporte
+                        {% elif expense.category == 'Entertainment' %}Entretenimiento
+                        {% elif expense.category == 'Utilities' %}Servicios
+                        {% elif expense.category == 'Housing' %}Vivienda
+                        {% elif expense.category == 'Health' %}Salud
+                        {% elif expense.category == 'Other' %}Otro
+                        {% else %}{{ expense.category }}{% endif %}
+                    </td>
+                    <td>{{ expense.amount }}</td>
+                    <td>{{ expense.payment_method }}</td> <td>
+                        <a href="{{ url_for('edit_expense', expense_id=expense.id) }}">Editar</a>
+                        <form method="POST" action="{{ url_for('delete_expense') }}" style="display:inline;">
+                            <input type="hidden" name="expense_id" value="{{ expense.id }}">
+                            <button type="submit">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No has registrado ningún gasto aún.</p>
+    {% endif %}
+
+    <h3>Tendencia de Gastos por Mes</h3>
+    <div style="width:600px;">
+        <canvas id="monthlyBarChart"></canvas>
+    </div>
+
+    <h3>Resumen de Gastos por Categoría</h3>
+    <div style="width:400px;">
+        <canvas id="categoryPieChart"></canvas>
+    </div>
+
+    <script>
+        // Gráfico de pastel (sin cambios)
+        const categoryTotals = {{ category_totals|tojson }};
+        const categories = Object.keys(categoryTotals);
+        const amounts = Object.values(categoryTotals);
+        const colors = [
+            'rgb(255, 99, 132)',
+            'rgb(54, 162, 235)',
+            'rgb(255, 205, 86)',
+            'rgb(75, 192, 192)',
+            'rgb(153, 102, 255)',
+            'rgb(255, 159, 64)',
+            'rgb(201, 203, 207)'
+        ];
+
+        const pieCtx = document.getElementById('categoryPieChart').getContext('2d');
+        const myPieChart = new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: categories.map(cat => {
+                    switch (cat) {
+                        case 'Food': return 'Comida';
+                        case 'Transportation': return 'Transporte';
+                        case 'Entertainment': return 'Entretenimiento';
+                        case 'Utilities': return 'Servicios';
+                        case 'Housing': return 'Vivienda';
+                        case 'Health': return 'Salud';
+                        case 'Other': return 'Otro';
+                        default: return cat;
+                    }
+                }),
+                datasets: [{
+                    data: amounts,
+                    backgroundColor: colors.slice(0, categories.length),
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Distribución de Gastos por Categoría'
+                    }
+                }
+            }
+        });
+
+        // Gráfico de barras
+        const monthlyTotals = {{ monthly_totals|tojson }};
+        const months = Object.keys(monthlyTotals);
+        const monthlyAmounts = Object.values(monthlyTotals);
+
+        const barCtx = document.getElementById('monthlyBarChart').getContext('2d');
+        const monthlyBarChart = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Gasto Total por Mes (COP)',
+                    data: monthlyAmounts,
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Monto (COP)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Mes'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Tendencia de Gastos por Mes'
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generar Informe de Gastos</title>
+</head>
+<body>
+    <h2>Generar Informe de Gastos</h2>
+    <form method="POST">
+        <label for="start_date">Fecha de Inicio:</label>
+        <input type="date" id="start_date" name="start_date" required><br><br>
+
+        <label for="end_date">Fecha de Fin:</label>
+        <input type="date" id="end_date" name="end_date" required><br><br>
+
+        <label for="categories">Categorías (opcional):</label><br>
+        <select id="categories" name="categories" multiple>
+            <option value="">Todas</option>
+            {% for category in all_categories %}
+            <option value="{{ category }}">
+                {% if category == 'Food' %}Mercado
+                {% elif category == 'Transportation' %}Transporte
+                {% elif category == 'Entertainment' %}Entretenimiento
+                {% elif category == 'Utilities' %}Servicios
+                {% elif category == 'Housing' %}Vivienda
+                {% elif category == 'Health' %}Salud
+                {% elif category == 'Other' %}Otro
+                {% else %}{{ category }}{% endif %}
+            </option>
+            {% endfor %}
+        </select><br><br>
+        <small>Puedes seleccionar múltiples categorías manteniendo presionada la tecla Ctrl (o Cmd en Mac).</small><br><br>
+
+        <label for="group_by">Agrupar por (opcional):</label>
+        <select id="group_by" name="group_by">
+            <option value="">No agrupar</option>
+            <option value="category">Categoría</option>
+            <option value="payment_method">Método de Pago</option>
+        </select><br><br>
+
+        <button type="submit">Generar Informe</button>
+    </form>
+    <p><a href="{{ url_for('reports') }}">Volver a Generar Informe</a> | <a href="{{ url_for('dashboard') }}">Volver al Panel</a></p>
+</body>
+</html>

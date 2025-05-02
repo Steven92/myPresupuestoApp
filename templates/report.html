@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Informe de Gastos</title>
+</head>
+<body>
+    <h2>Informe de Gastos</h2>
+    <p>Desde: {{ start_date }} Hasta: {{ end_date }}</p>
+
+    {% if grouped_by %}
+        <h3>Gastos Agrupados por {{ grouped_by|capitalize }}</h3>
+        {% for group, items in grouped_report.items() %}
+            <h4>{{ group }} - Total: {{ grouped_total[group] }}</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Descripción</th>
+                        <th>Categoría</th>
+                        <th>Monto (COP)</th>
+                        <th>Método de Pago</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.date }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>
+                            {% if item.category == 'Food' %}Comida
+                            {% elif item.category == 'Transportation' %}Transporte
+                            {% elif item.category == 'Entertainment' %}Entretenimiento
+                            {% elif item.category == 'Utilities' %}Servicios
+                            {% elif item.category == 'Housing' %}Vivienda
+                            {% elif item.category == 'Health' %}Salud
+                            {% elif item.category == 'Other' %}Otro
+                            {% else %}{{ item.category }}{% endif %}
+                        </td>
+                        <td>{{ item.amount }}</td>
+                        <td>{{ item.payment_method }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <br>
+        {% endfor %}
+        <h3>Total Gastado: {{ total_spent }}</h3>
+    {% else %}
+        <h3>Todos los Gastos</h3>
+        {% if report_data %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Descripción</th>
+                        <th>Categoría</th>
+                        <th>Monto (COP)</th>
+                        <th>Método de Pago</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in report_data %}
+                    <tr>
+                        <td>{{ item.date }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>
+                            {% if item.category == 'Food' %}Comida
+                            {% elif item.category == 'Transportation' %}Transporte
+                            {% elif item.category == 'Entertainment' %}Entretenimiento
+                            {% elif item.category == 'Utilities' %}Servicios
+                            {% elif item.category == 'Housing' %}Vivienda
+                            {% elif item.category == 'Health' %}Salud
+                            {% elif item.category == 'Other' %}Otro
+                            {% else %}{{ item.category }}{% endif %}
+                        </td>
+                        <td>{{ item.amount }}</td>
+                        <td>{{ item.payment_method }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" style="text-align:right; font-weight:bold;">Total Gastado:</td>
+                        <td style="font-weight:bold;">{{ total_spent }}</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        {% else %}
+            <p>No se encontraron gastos para el período y los criterios seleccionados.</p>
+        {% endif %}
+    {% endif %}
+
+    <p>
+        <a href="{{ url_for('reports') }}">Volver a Generar Informe</a> | 
+        <a href="{{ url_for('dashboard') }}">Volver al Panel</a></p> |
+        <a href="{{ url_for('export_report', start_date=start_date, end_date=end_date, categories=request.args.getlist('categories'), group_by=grouped_by) }}">Exportar a CSV</a>
+
+</body>
+</html>
